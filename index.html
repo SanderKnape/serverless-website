@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Serverless S3 storage prices</title>
+    <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' integrity='sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u' crossorigin='anonymous'>
+  </head>
+  <body>
+    <div class='container'>
+        <h1>S3 Storage prices</h1>
+        <p>This page shows the pricing history of the <a href='https://aws.amazon.com/s3/pricing/'>four main S3 storage types</a> provided by Amazon S3. All prices are for the <strong>eu-west-1</strong> region.</p>
+        <p id='loading'><em>Loading prices...</em></p>
+        <div class='table-responsive'>
+            <table class='table table-striped' style='display: none'>
+                <tr>
+                    <th>Date</th>
+                    <th>Storage type</th>
+                    <th>Price</th>
+                    <th>Range (GB)</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js'></script>
+    <script>
+    // Using good-old jQuery to fill the table with s3 prices received from the API Gatway endpoint
+    $(document).ready(function() {
+        var api_gateway_url = 'https://9hdt1hl2fj.execute-api.eu-west-1.amazonaws.com/production';
+
+        var months = ["January", "February", "March", "April", "June", "July", "August", "September", "October", "November", "December"];
+        var rows = [];
+
+        $.get(api_gateway_url, function(data) {
+            data.forEach(function(item) {
+                date = new Date(parseInt(item['Date']['S']));
+                formatted_date = `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+
+                // build an array of rows containing the prices
+                rows.push(`<tr> \
+                    <td>${formatted_date}</td> \
+                    <td>${item['StorageType']['S']}</td> \
+                    <td>$${item['Price']['S']}</td> \
+                    <td>${item['BeginRange']['S']} - ${item['EndRange']['S']}</td> \
+                </tr>`);
+            });
+
+            // show the now filled table and hide the "loading" message
+            $('table.table').append(rows.join()).show();
+            $('#loading').hide();
+        });
+    });
+    </script>
+  </body>
+</html>
